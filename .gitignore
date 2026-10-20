@@ -1,0 +1,8 @@
+# Segredos e ambiente local — nada disto vai para o git.
+.env
+credentials/
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+*.log
+.venv/

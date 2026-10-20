@@ -1,0 +1,118 @@
+ANOTAÇÕES DA RAQUEL — o seu caderno pessoal, com senha
+======================================================
+
+O QUE É
+-------
+Um app só seu: vendas, consultas e exames (com foto), lembretes, compras do
+mercado, tarefas a fazer — e quantas folhas você quiser criar. Você escreve pelo
+app e tudo fica guardado numa PLANILHA do Google Drive — a planilha é o cofre,
+o app é a porta.
+
+A SENHA é a que o Hamilton te passou. Ela não fica escrita em nenhum arquivo do
+projeto (nem aqui, nem no handoff) — só no cofre de segredos do app.
+
+Este app é PARECIDO com o "Anotações" do Hamilton, mas é SEPARADO: a planilha é
+sua, a senha é sua e nada do que você escreve aparece no app dele.
+
+
+COMO ABRIR
+----------
+No PC ......... o app **já sobe sozinho** quando você liga o computador (é um
+                serviço do sistema). Basta abrir http://localhost:8641
+                Se ele estiver parado: cartão "🗒️ Anotações da Raquel" na
+                Central -> Ligar  (ou  bash iniciar-raquel-anotacoes.sh)
+No celular .... o app já está **preparado** para o celular (botões grandes,
+                fonte certa), mas ainda não foi publicado na internet: ele roda
+                só no PC. Enquanto o Hamilton não publicar, use a planilha
+                "Anotações da Raquel" no app do Google Drive/Sheets — ela já
+                está pronta, com as 5 folhas.
+
+
+COMO USAR
+---------
+As folhas de hoje são estas (na ordem em que aparecem):
+  💰 Vendas e Recebimentos   🩺 Consultas e Exames   🔔 Lembretes
+  🛒 Compras do mercado      ✅ Tarefas a fazer
+
++ Escreva no campo de cima e toque em "＋ Adicionar".
+  O app pergunta só o que faz sentido para a folha:
+    Vendas ..... Qtd, Valor, Cliente/obs.
+    Consultas .. Quando, Médico/local  (+ a FOTO do exame)
+    Compras .... Qtd, Preço, Onde/obs.
+    Tarefas .... Prazo, Prioridade (Alta/Média/Baixa), Comentário
+    Lembretes .. Quando, Comentário
++ Um toque na bolinha marca como feito. O que está feito não some: ele desce
+  para "✅ Feitos" (dá para ver e reabrir quando quiser).
++ Os botões ficam NA FRENTE do item: ✏️ (corrigir) e 🗑️ (apagar), e o
+  texto vem depois. Tudo numa linha só — também no celular.
++ O 🗑️ apaga **só aquele item** — e pede confirmação
+  ("Sim, apagar" / "Não"). Nada de apagar em massa.
++ 📷 (nas Consultas) guarda a **foto do exame ou da consulta**: toque no
+  📷 do item, escolha a foto (no celular ele abre a câmera ou a galeria) e
+  pronto — a foto vai para a pasta "PDF e Imagens" do Drive. Aceita várias de
+  uma vez, e também PDF. Depois o item mostra "📷 foto 1" para você abrir.
++ Troque de folha tocando nos nomes no topo da tela.
++ Para criar uma folha nova: barra da esquerda -> "Nova folha" -> escolha o tipo
+  -> "Criar folha". A folha nasce igual às outras (cabeçalho congelado, etc.).
++ "🔗 Abrir no Google Sheets" abre a planilha de verdade (dá para mexer por lá
+  também — o app lê o que você escrever na planilha).
++ Para renomear ou apagar uma folha, use o Google Sheets (link acima).
+
+
+ONDE FICA O QUE VOCÊ ESCREVEU
+-----------------------------
+Planilha "Anotações da Raquel", dentro da pasta "Raquel Anotações" no Drive do
+Hamilton. Cada folha do app é uma aba da planilha. Quem abre a planilha é você
+(ou o Hamilton); o robô (vulgo "conta de serviço") é quem o app usa para
+escrever nela.
+
+BACKUP: o próprio Drive guarda o histórico de versões (Arquivo -> Histórico de
+versões). Nada aqui apaga sozinho.
+
+
+SE ALGO DER ERRADO
+------------------
+- "Não achei nenhuma planilha chamada Anotações da Raquel" -> a planilha foi
+  renomeada, saiu da pasta "Raquel Anotações" ou o compartilhamento com o robô
+  foi removido. Compartilhe a pasta de novo como Editor.
+- "App bloqueado — a senha ainda não foi configurada" -> faltam os segredos
+  (.streamlit/secrets.toml).
+- "Ainda não autorizei o envio de fotos" -> no PC, rode uma vez
+  ./.venv/bin/python autorizar-fotos.py  (abre o navegador; escolha a conta do
+  Hamilton e clique em Permitir).
+- "Não consegui enviar a foto para o Drive" -> ou a autorização venceu (rode o
+  comando acima) ou a pasta "PDF e Imagens" saiu do Drive.
+- Senha errada muitas vezes seguidas: o app faz você esperar (2, 4, 8… até 60
+  segundos). É de propósito — o app fica na internet.
+- Tela estranha depois de mexer no código: reinicie o serviço com
+  systemctl --user restart raquel-anotacoes  (o Streamlit guarda módulos antigos
+  na memória). Se o app "sumir", o próprio sistema levanta ele de novo em 5 s;
+  se não levantar, veja:  journalctl --user -u raquel-anotacoes -n 40
+
+Fale com o Hamilton na aba do Anotações da Raquel — o HANDOFF.md desta pasta tem
+todos os detalhes técnicos.
+
+
+AINDA FALTA: PUBLICAR (para abrir do celular)
+---------------------------------------------
+Hoje o app funciona no PC (porta 8641). Para abrir de qualquer lugar, igual à
+Minha Loja, falta publicar — 5 minutos, no navegador:
+
+  1. Abra  https://share.streamlit.io  e entre com a conta do GitHub.
+  2. "Create app" / "New app" ->
+       Repository ........ hamiltonjau/apps-hamilton
+       Branch ............ master
+       Main file path .... raquel-anotações/app.py
+  3. No PC, rode:  ./.venv/bin/python preparar-nuvem.py
+     e cole a saída inteira em "Advanced settings" -> "Secrets" (vem a senha, a
+     conta de serviço e o token das fotos; a senha tem de vir ANTES das seções).
+     ⚠️ O token das fotos NÃO pode ir para o GitHub — só para os Secrets.
+  4. "Deploy". Quando terminar, o link do app é o que você salva na tela inicial
+     do celular.
+
+Se as fotos pararem de subir depois de uns dias, é a autorização do Google que
+venceu: rode  ./.venv/bin/python autorizar-fotos.py  de novo e atualize o bloco
+[google_oauth] nos Secrets.
+
+Enquanto não publicar, dá para usar a planilha "Anotações da Raquel" direto no
+app do Google Drive/Sheets no celular — ela já está pronta, com as 5 folhas.

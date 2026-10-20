@@ -1,0 +1,13 @@
+google-api-python-client>=2.0
+google-auth>=2.0
+python-dotenv>=1.0
+streamlit>=1.40
+
+# ⚠️ NÃO subir o pyarrow para 25/26 sem testar: o 26.0.0 tem SEGFAULT conhecido
+# (apache/arrow#50471). O próprio Streamlit Cloud detecta e rebaixa:
+#   "Detected pyarrow 26.0.0 (known segfault, apache/arrow#50471). Replacing with pyarrow<25."
+# Foi o que derrubou o app no PC e na nuvem em 19/10/2026 (ver HANDOFF.md).
+pyarrow<25
+
+# Fotos no Drive: o envio é feito com a conta do dono (OAuth), não com o robô.
+google-auth-oauthlib>=1.2
