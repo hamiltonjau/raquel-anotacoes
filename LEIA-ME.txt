@@ -100,9 +100,11 @@ Minha Loja, falta publicar — 5 minutos, no navegador:
 
   1. Abra  https://share.streamlit.io  e entre com a conta do GitHub.
   2. "Create app" / "New app" ->
-       Repository ........ hamiltonjau/apps-hamilton
-       Branch ............ master
-       Main file path .... raquel-anotações/app.py
+       Repository ........ hamiltonjau/raquel-anotacoes
+       Branch ............ main
+       Main file path .... app.py
+     (É um repositório público SÓ deste app: o Streamlit Cloud grátis aceita um
+     único app privado por conta — e esse já é o da Minha Loja.)
   3. No PC, rode:  ./.venv/bin/python preparar-nuvem.py
      e cole a saída inteira em "Advanced settings" -> "Secrets" (vem a senha, a
      conta de serviço e o token das fotos; a senha tem de vir ANTES das seções).

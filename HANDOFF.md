@@ -19,6 +19,7 @@ O dado mora numa **planilha do Drive** dela (folha = aba da planilha).
 | Dono da planilha | `hamiltonjau@gmail.com` (o robô só é Editor) |
 | Robô | `loja-robo@loja-estoque-511616.iam.gserviceaccount.com` |
 | Cartão na Central | id `raquel-anotacoes`, emoji 🗒️ |
+| Repositório **público** | `hamiltonjau/raquel-anotacoes` (só este app — é o que o Streamlit Cloud lê) |
 | Pasta das **fotos** | **PDF e Imagens** — `1ZovVMquMgXP3_ldu_iQHfuqp3gazeGJr` |
 | Token das fotos (OAuth) | `credentials/token-fotos.json` (fora do git) |
 
@@ -60,7 +61,8 @@ bash iniciar-raquel-anotacoes.sh                                # ou pelo servi�
 ./.venv/bin/python autorizar-fotos.py                           # 1x: deixa o app enviar foto (abre o navegador)
 ./.venv/bin/python preparar-nuvem.py                            # monta os Secrets da nuvem (só imprime na tela)
 bash instalar-servico.sh                                        # (re)instala o serviço
-./publicar.sh "mensagem"                                        # commit + push (repo raiz)
+./publicar.sh "mensagem"                                        # commit + push (repo raiz) + espelho público
+bash sincronizar-publico.sh "mensagem"                          # só o espelho público (Streamlit Cloud)
 ```
 ⚠️ **Streamlit não recarrega `src/`**: mudou código, `systemctl --user restart
 raquel-anotacoes`.
@@ -204,6 +206,38 @@ navegador → a planilha ficou com o link em `H2` e o Drive com
 Também testado o caminho **da nuvem** (token vindo de dicionário, sem arquivo):
 subiu e apagou igual.
 
+## 🌐 O repositório público (por que existe)
+
+O **Streamlit Community Cloud** aceita **um único app privado por workspace** — e
+esse slot já é da **Minha Loja**. Tentativa em 20/10/2026:
+
+> *"You can only have one private app per workspace on Community Cloud"*
+
+Apps de repositório **público** não têm esse limite. Decisão do Hamilton:
+**repositório público só com este app** — e não o `apps-hamilton` inteiro, que
+tem os handoffs de todos os apps (com senhas e e-mails anotados).
+
+| Peça | Onde |
+|---|---|
+| Fonte da verdade | esta pasta, no repositório **privado** `apps-hamilton` |
+| Vitrine pública | `hamiltonjau/raquel-anotacoes` (raiz = esta pasta) |
+| Cópia local do espelho | `~/Documentos/raquel-anotacoes-publico` |
+
+**Como sincroniza:** `./publicar.sh "msg"` faz o commit aqui **e** roda
+`bash sincronizar-publico.sh "msg"` no fim (se o espelho falhar, o commit daqui
+já está feito — é só rodar o sincronizador de novo).
+
+O `sincronizar-publico.sh` usa `rsync --delete` com exclusões: **nunca** vão para
+o público `.venv/`, `credentials/`, `.streamlit/secrets.toml`, a unit do systemd,
+os scripts locais e o `README.md` (que só existe no público). ⚠️ O
+`--exclude '.git'` é obrigatório — sem ele o `--delete` apaga o `.git` do destino
+(aconteceu no primeiro teste).
+
+**Senha:** em 20/10 ela **saiu dos arquivos versionados** (`HANDOFF.md` tinha o
+literal — contra a regra do `AGENTS.md`). Agora só existe no
+`.streamlit/secrets.toml` (PC) e nos *Secrets* da nuvem. O repositório é público:
+**nada de senha, chave ou token em arquivo versionado.**
+
 ## 📱 Celular (20/10/2026)
 
 A Raquel vai usar no celular — e celular precisa de outra medida. O que mudou
@@ -261,8 +295,8 @@ certa e foi apagado depois.
 - [ ] **Publicar no Streamlit Cloud** (decidido em 20/10: vai publicar, para ela
       usar no celular). O código já está pronto; falta o clique no site:
       1. `share.streamlit.io` → **New app**.
-      2. Repositório `hamiltonjau/apps-hamilton`, branch **master**,
-         *main file* **`raquel-anotações/app.py`**.
+      2. Repositório **`hamiltonjau/raquel-anotacoes`** (público — ver abaixo por
+         quê), branch **main**, *main file* **`app.py`**.
       3. **Secrets**: rodar no PC
          `./.venv/bin/python preparar-nuvem.py` e colar a saída inteira
          (`senha`, `[gcp_service_account]` e `[google_oauth]` — a senha **antes**

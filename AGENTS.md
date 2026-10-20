@@ -26,8 +26,10 @@ são próprios** — nada é compartilhado com o app dele além do robô.
 - Testes da regra (offline, rápido): `./.venv/bin/python testes.py`
 - Testes de verdade (mexe na planilha da Raquel — limpe depois):
   `./.venv/bin/python testes.py --real <id-da-planilha>`
-- Publicar (commit + push no repositório principal, só a pasta `raquel-anotações/`):
-  `./publicar.sh "mensagem"`
+- Publicar (commit + push no repositório principal, só a pasta `raquel-anotações/`)
+  **e** espelhar no repositório público: `./publicar.sh "mensagem"`
+- Só o espelho público (é ele que o Streamlit Cloud lê):
+  `bash sincronizar-publico.sh "mensagem"`
 
 ## Arquivos
 | Arquivo | O que é |
@@ -43,7 +45,8 @@ são próprios** — nada é compartilhado com o app dele além do robô.
 | `testes.py` | testes (regra + opcional de verdade) |
 | `raquel-anotacoes.service` | cópia versionada da unidade do systemd (porta 8641) |
 | `instalar-servico.sh` | (re)instala a unidade em `~/.config/systemd/user/` |
-| `.streamlit/secrets.toml` | **fora do git**: `senha` + `[gcp_service_account]` |
+| `.streamlit/secrets.toml` | **fora do git**: `senha` + `[gcp_service_account]` + `[google_oauth]` |
+| `sincronizar-publico.sh` | espelha a pasta em `hamiltonjau/raquel-anotacoes` (público) |
 
 ## Como o dado anda
 - **Cada folha = uma aba da planilha**, sempre com as mesmas 8 colunas:
@@ -79,6 +82,11 @@ são próprios** — nada é compartilhado com o app dele além do robô.
   acesso vem pela **pasta** *Raquel Anotações*.
 - ⚠️ **Dois apps com `app.py` na mesma máquina**: ao mexer em porta/processo,
   confira a porta (**8640** = Hamilton, **8641** = Raquel) antes de matar nada.
+- **O repositório é PÚBLICO** (`hamiltonjau/raquel-anotacoes`, só este app — o
+  Streamlit Cloud só deixa **um app privado por workspace**, e o slot é da Loja).
+  Consequência: **nada de senha, chave ou token em arquivo versionado** — nem em
+  handoff, nem em comentário. Já aconteceu de a senha estar no `HANDOFF.md`
+  (20/10/2026); foi removida.
 - **`credentials/token-fotos.json` é tão sensível quanto a senha**: dá acesso ao
   Drive inteiro do Hamilton. Fora do git, sempre. Na nuvem vai nos *Secrets*
   (`[google_oauth]`).
