@@ -224,6 +224,10 @@ embaixo da câmera lembra que o **⇄** troca para a câmera de trás (o padrão
 frente) e que, para documento, **📁 Arquivo → Câmera** dá a resolução cheia do
 celular (12 MP, muito melhor que o vídeo de 1080p).
 
+**Confirmado pelo Hamilton (21/10, no celular, foto do mesmo comprovante):**
+"AGORA SIM FICOU BOM". Ou seja: o problema era mesmo a captura no tamanho da
+tela — não o PDF, não o JPEG, não o Drive.
+
 **HEIC ficou fora da lista de propósito:** sem a extensão em `TIPOS_ACEITOS`, o
 iPhone converte a foto para JPEG antes de mandar; se aceitasse HEIC, o Pillow não
 abriria sem `pillow-heif` (dependência a mais na nuvem).
