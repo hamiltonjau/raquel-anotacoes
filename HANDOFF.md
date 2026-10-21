@@ -244,6 +244,15 @@ ficou com o link em `H3` e o Drive com `21-10-2026 - Teste foto PDF.pdf`
 (**795 KB**, `application/pdf`). Item apagado pela tela e arquivo apagado do
 Drive; a pasta ficou vazia.
 
+**Prova (21/10, no app publicado):** o mesmo teste em
+https://raquel-anotacoes.streamlit.app — entrei com a senha, criei "Teste nuvem
+PDF", 📷 → **📁 Arquivo**, enviei um JPG de **137 KB** → `H3` ganhou o link e o
+Drive ficou com `21-10-2026 - Teste nuvem PDF.pdf` (**102 KB**,
+`application/pdf`, dono `hamiltonjau@gmail.com`). Ou seja: **o Pillow funciona na
+nuvem** (a foto foi reduzida e virou PDF lá). Item apagado pela tela e arquivo
+apagado do Drive; pasta vazia. A opção **📸 Câmera** apareceu nos dois (no PC o
+navegador pediu permissão de câmera — no celular é a câmera de trás).
+
 ## 🌐 O repositório público (por que existe)
 
 O **Streamlit Community Cloud** aceita **um único app privado por workspace** — e
