@@ -437,6 +437,7 @@ def _desenhar_item(sheets, sid: str, folha: str, tipo: str, item: dict, gid: int
             if tipo == "consultas":
                 if st.button("📷", key=f"f{item['linha']}", help="Anexar foto"):
                     st.session_state.pop("editando", None)
+                    st.session_state.pop(f"enviadas{item['linha']}", None)
                     st.session_state["fotografando"] = item["linha"]
                     st.rerun()
             rotulo = item["item"] or item["detalhe"] or "(sem texto)"
@@ -494,24 +495,46 @@ def _area_fotos(sheets, sid: str, folha: str, item: dict) -> None:
     if st.session_state.get("fotografando") != item["linha"]:
         return
 
-    st.caption("Vai para a pasta **PDF e Imagens**, no seu Drive.")
-    arquivos = st.file_uploader(
-        "Foto do exame / consulta", type=fotos.TIPOS_ACEITOS,
-        accept_multiple_files=True, key=f"up{item['linha']}",
-        label_visibility="collapsed",
+    st.caption("O app **reduz a foto** e guarda em **PDF** (fica bem mais leve), na pasta "
+               "**PDF e Imagens** do seu Drive.")
+    origem = st.radio(
+        "De onde vem", ["📸 Câmera", "📁 Arquivo"],
+        horizontal=True, key=f"ori{item['linha']}", label_visibility="collapsed",
+        help="Câmera abre a câmera do celular; Arquivo deixa escolher da galeria, "
+             "dos downloads ou um PDF que já existe.",
     )
+    if origem.startswith("📸"):
+        foto = st.camera_input("Tirar foto", key=f"cam{item['linha']}",
+                               label_visibility="collapsed")
+        arquivos = [foto] if foto else []
+    else:
+        arquivos = st.file_uploader(
+            "Foto do exame / consulta", type=fotos.TIPOS_ACEITOS,
+            accept_multiple_files=True, key=f"up{item['linha']}",
+            label_visibility="collapsed",
+        ) or []
     if not arquivos:
         return
+
+    # Trocar o formato (PDF/JPG) faz a tela rodar de novo COM os mesmos arquivos
+    # escolhidos — sem esta trava, a mesma foto subia duas vezes.
+    assinaturas = {(a.name, len(a.getvalue())) for a in arquivos}
+    marca = f"enviadas{item['linha']}"
+    if st.session_state.get(marca) == assinaturas:
+        return
     try:
-        with st.spinner("Enviando para o Drive..."):
+        with st.spinner("Reduzindo e enviando para o Drive..."):
+            brutos = [{"nome": getattr(a, "name", "camera.jpg"),
+                       "dados": a.getvalue(),
+                       "tipo": getattr(a, "type", "")} for a in arquivos]
+            prontos = fotos.preparar(brutos)
             novos = []
-            for arquivo in arquivos:
+            for pronto in prontos:
                 nome = fotos.nome_do_arquivo(folha, item.get("item"),
-                                             item.get("quando"), arquivo.name)
+                                             item.get("quando"),
+                                             sufixo=pronto["sufixo"])
                 enviado = fotos.enviar(
-                    arquivo.getvalue(), nome,
-                    arquivo.type or "application/octet-stream",
-                    info=_info_oauth(),
+                    pronto["dados"], nome, pronto["tipo"], info=_info_oauth(),
                 )
                 novos.append(enviado["link"])
         pl.gravar_foto(sheets, sid, folha, item["linha"], links + novos)
@@ -522,10 +545,16 @@ def _area_fotos(sheets, sid: str, folha: str, item: dict) -> None:
     else:
         # O `st.rerun()` apaga a mensagem; então ela fica guardada e aparece
         # embaixo do item na rodada seguinte.
+        st.session_state[marca] = assinaturas
         st.session_state.pop("fotografando", None)
+        antes = sum(len(a.getvalue()) for a in arquivos)
+        depois = sum(len(p["dados"]) for p in prontos)
+        conta = f"{len(novos)} arquivo(s) guardado(s)"
+        if antes and depois < antes:
+            conta += f" · {antes / 1024:.0f} KB → {depois / 1024:.0f} KB"
         st.session_state["aviso_fotos"] = {
             "linha": item["linha"],
-            "texto": f"{len(novos)} foto(s) guardada(s) na pasta PDF e Imagens.",
+            "texto": f"{conta} na pasta PDF e Imagens.",
         }
         st.rerun()
 

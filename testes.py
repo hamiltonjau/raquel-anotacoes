@@ -70,6 +70,53 @@ def teste_fotos() -> None:
     igual("para_item com linha curta não quebra", regra.para_item(2, [False, "x"])["foto"], "")
 
 
+def teste_preparo() -> None:
+    print("\n1c. Foto do celular: reduzir e virar PDF")
+    import io
+
+    from PIL import Image
+
+    from src import fotos
+
+    # Uma "foto grande" de celular: 3000x2000 com ruído (não comprime de graça).
+    grande = Image.effect_noise((3000, 2000), 90).convert("RGB")
+    cru = io.BytesIO()
+    grande.save(cru, "JPEG", quality=95)
+    cru = cru.getvalue()
+    entrada = [{"nome": "IMG_1234.jpg", "dados": cru, "tipo": "image/jpeg"}]
+
+    pdf = fotos.preparar(entrada, como_pdf=True)
+    igual("1 foto -> 1 arquivo", len(pdf), 1)
+    igual("virou PDF", pdf[0]["tipo"], "application/pdf")
+    igual("sufixo .pdf", pdf[0]["sufixo"], ".pdf")
+    ok("é PDF de verdade", pdf[0]["dados"][:5] == b"%PDF-")
+    ok("ficou bem menor", len(pdf[0]["dados"]) < len(cru) * 0.5,
+       f"({len(cru) // 1024} KB -> {len(pdf[0]['dados']) // 1024} KB)")
+
+    jpg = fotos.preparar(entrada, como_pdf=False)
+    igual("JPG: 1 arquivo", len(jpg), 1)
+    igual("JPG: tipo", jpg[0]["tipo"], "image/jpeg")
+    ok("JPG é JPEG de verdade", jpg[0]["dados"][:2] == b"\xff\xd8")
+    aberta = Image.open(io.BytesIO(jpg[0]["dados"]))
+    ok("JPG reduzido a 1800 px no lado maior",
+       max(aberta.size) <= fotos.LADO_MAX, f"({aberta.size})")
+    ok("JPG também ficou menor", len(jpg[0]["dados"]) < len(cru) * 0.5)
+
+    duas = fotos.preparar(entrada * 2, como_pdf=True)
+    igual("2 fotos -> 1 PDF só", len(duas), 1)
+    igual("PDF com 2 páginas", duas[0]["paginas"], 2)
+
+    from src import fotos as f2
+    falso_pdf = [{"nome": "exame.pdf", "dados": b"%PDF-1.4 conteudo",
+                  "tipo": "application/pdf"}]
+    igual("PDF que já veio passa reto", f2.preparar(falso_pdf, como_pdf=True)[0]["dados"],
+          b"%PDF-1.4 conteudo")
+    ok("HEIC fora da lista (iPhone manda JPEG)", "heic" not in fotos.TIPOS_ACEITOS)
+    igual("nome do arquivo com sufixo escolhido",
+          fotos.nome_do_arquivo("Consultas", "Dentista", "25/10/2026", sufixo=".pdf"),
+          "25-10-2026 - Dentista.pdf")
+
+
 def teste_booleanos() -> None:
     print("\n2. 'Feito' do jeito que o Sheets devolve")
     for valor in (True, 1, "TRUE", "true", "Sim", "x", "✓", "VERDADEIRO"):
@@ -308,6 +355,7 @@ def principal() -> int:
     print("=" * 62)
     teste_linhas()
     teste_fotos()
+    teste_preparo()
     teste_booleanos()
     teste_precos()
     teste_prioridade()

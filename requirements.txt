@@ -11,3 +11,7 @@ pyarrow<25
 
 # Fotos no Drive: o envio é feito com a conta do dono (OAuth), não com o robô.
 google-auth-oauthlib>=1.2
+
+# Reduzir a foto e montar o PDF do exame (já vem com o Streamlit; explícito porque
+# o app depende disso para o tamanho do arquivo).
+pillow>=10

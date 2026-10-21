@@ -17,7 +17,16 @@ from pathlib import Path
 from .config import PASTA_FOTOS, TOKEN_FOTOS, ligar_ipv4
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
-TIPOS_ACEITOS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "pdf"]
+
+# `heic` fica FORA de propósito: se o celular manda HEIC cru, o Pillow não abre
+# sem uma biblioteca extra. Sem a extensão na lista, o iPhone converte a foto
+# para JPEG antes de enviar (e aí tudo funciona em qualquer máquina).
+TIPOS_ACEITOS = ["jpg", "jpeg", "png", "webp", "pdf"]
+
+# O que deixa a foto leve não é o PDF: é reduzir o lado e recomprimir. 1800 px
+# dá para ler exame no celular e cabe em ~200-400 KB.
+LADO_MAX = 1800
+QUALIDADE = 78
 
 _trava = threading.Lock()
 _cache = {"chave": None, "creds": None}
@@ -73,15 +82,85 @@ def servico(info: dict | None = None):
     return build("drive", "v3", credentials=credenciais(info), cache_discovery=False)
 
 
-def nome_do_arquivo(folha: str, item: str, quando: str, original: str) -> str:
-    """Nome legível dentro da pasta: '2026-10-25 - Dentista - exame.jpg'."""
+def nome_do_arquivo(folha: str, item: str, quando: str, original: str = "",
+                    sufixo: str | None = None) -> str:
+    """Nome legível dentro da pasta: '25/10/2026 - Dentista.pdf'."""
     from . import regra
 
     pedacos = [quando or "", item or folha or "foto"]
     base = " - ".join(p for p in pedacos if p)
     base = regra.limpar(base, 90).replace("/", "-").replace("\\", "-")
-    sufixo = Path(str(original or "")).suffix.lower() or ".jpg"
-    return f"{base}{sufixo}"
+    ext = sufixo or Path(str(original or "")).suffix.lower() or ".jpg"
+    return f"{base}{ext}"
+
+
+def _abrir_foto(dados: bytes, lado_max: int = LADO_MAX):
+    """Abre a imagem do celular já endireitada (EXIF) e reduzida."""
+    from PIL import Image, ImageOps
+
+    img = Image.open(io.BytesIO(dados))
+    img.load()
+    img = ImageOps.exif_transpose(img)          # senão a foto sai deitada
+    if img.mode not in ("RGB", "L"):
+        img = img.convert("RGB")
+    img.thumbnail((lado_max, lado_max), Image.LANCZOS)
+    return img
+
+
+def preparar(arquivos: list[dict], como_pdf: bool = True,
+             lado_max: int = LADO_MAX, qualidade: int = QUALIDADE) -> list[dict]:
+    """Deixa os arquivos do celular prontos para subir, do menor jeito.
+
+    `arquivos`: `[{"nome": ..., "dados": b"...", "tipo": "image/jpeg"}]`.
+
+    Devolve `[{"dados", "tipo", "sufixo", "paginas"}]`:
+
+    - **PDF** que já veio do celular: passa reto (não mexe em PDF de verdade).
+    - **Imagem** com `como_pdf=True`: todas viram **um único PDF** (a foto de um
+      exame de 3 folhas fica num arquivo só).
+    - **Imagem** com `como_pdf=False`: um **JPG** por foto, já reduzido.
+
+    ⚠️ O que diminui de verdade é reduzir/recomprimir (1800 px, qualidade 78):
+    uma foto de 4 MB vira ~300 KB. O PDF é só a embalagem — ele não encolhe a
+    foto sozinho.
+    """
+    saida: list[dict] = []
+    imagens = []                                # (nome, PIL.Image)
+    try:
+        for arquivo in arquivos or []:
+            nome = str(arquivo.get("nome") or "")
+            tipo = str(arquivo.get("tipo") or "").lower()
+            dados = arquivo.get("dados") or b""
+            if tipo == "application/pdf" or nome.lower().endswith(".pdf"):
+                saida.append({"dados": dados, "tipo": "application/pdf",
+                              "sufixo": ".pdf", "paginas": 1})
+                continue
+            imagens.append((nome, _abrir_foto(dados, lado_max)))
+
+        if not imagens:
+            return saida
+
+        if como_pdf:
+            buffer = io.BytesIO()
+            primeira = imagens[0][1]
+            resto = [imagem for _, imagem in imagens[1:]]
+            primeira.save(buffer, "PDF", save_all=True, append_images=resto,
+                          resolution=150.0, quality=qualidade)
+            saida.append({"dados": buffer.getvalue(), "tipo": "application/pdf",
+                          "sufixo": ".pdf", "paginas": len(imagens)})
+        else:
+            for _, imagem in imagens:
+                buffer = io.BytesIO()
+                imagem.save(buffer, "JPEG", quality=qualidade, optimize=True)
+                saida.append({"dados": buffer.getvalue(), "tipo": "image/jpeg",
+                              "sufixo": ".jpg", "paginas": 1})
+        return saida
+    finally:
+        for _, imagem in imagens:
+            try:
+                imagem.close()
+            except Exception:                   # noqa: BLE001 (não interessa)
+                pass
 
 
 def enviar(dados: bytes, nome: str, mimetype: str, info: dict | None = None,

@@ -44,12 +44,12 @@ https://docs.google.com/spreadsheets/d/1dKk9vxDVjbTTh4X4GujoEqpFPijBnO6UDDEXPHPB
 | Estrutura | ✅ 5 folhas (3 padrão + **Vendas e Recebimentos** + **Consultas e Exames**) e `_config` |
 | Tela | ✅ título **"📝 Anotações da Raquel"**, legenda "Guardado em Anotações da Raquel" |
 | Senha | ✅ testada **na tela**: a senha antiga é recusada, a atual entra |
-| Fotos nas consultas | ✅ enviadas **pelo app**, com a conta do Hamilton (OAuth), para a pasta *PDF e Imagens* |
+| Fotos nas consultas | ✅ **câmera ou arquivo**, foto reduzida a 1800 px e guardada em **PDF**, com a conta do Hamilton (OAuth), na pasta *PDF e Imagens* |
 | Celular | ✅ tema/medidas de celular prontos (conferidos em tela de 390 px) |
-| Testes | ✅ `./.venv/bin/python testes.py` → **85/85**; `--real <id>` → **110**, só falha *"preparou a planilha"* (esperada, ver abaixo) |
+| Testes | ✅ `./.venv/bin/python testes.py` → **100/100**; `--real <id>` → **110**, só falha *"preparou a planilha"* (esperada, ver abaixo) |
 | Serviço | ✅ instalado e ativo (`systemctl --user status raquel-anotacoes`) |
 | Central | ✅ cartão 🗒️ registrado em `central/config.json` |
-| Publicar na internet | ⏳ **falta o clique do Hamilton** (decisão tomada em 20/10: vai publicar; passo a passo nas *Pendências*) |
+| Publicar na internet | ✅ **no ar**: https://raquel-anotacoes.streamlit.app (repo público `hamiltonjau/raquel-anotacoes`, ver abaixo) |
 
 ## Como rodar / testar
 ```bash
@@ -148,6 +148,17 @@ raquel-anotacoes`.
    linha de comando do shell que o executa). Para parar um app de teste, ache o
    PID pela **porta**: `ss -ltnp | grep :8699`. (A lição nº 27 da casa já dizia
    isso para `app.py` — vale para qualquer padrão.)
+11. **Campo controlado do React não aceita `input.value = ...`.** No navegador
+   headless (Streamlit 1.66), o jeito que funciona é o *setter* nativo:
+   `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, txt)`
+   + `dispatchEvent(new Event('input', {bubbles: true}))`. E `.click()` puro às
+   vezes não dispara o `st.button`: o que passou foi a sequência completa de
+   `pointerdown/mousedown/pointerup/mouseup/click` nas coordenadas do botão.
+12. **"PDF é menor" não é verdade sozinho — quem encolhe é a redução.** Guardar
+   como PDF só embala a foto; 4 MB de foto continuam ~4 MB dentro do PDF. O ganho
+   vem de `thumbnail(1800)` + JPEG q78. E, se a foto já vier muito comprimida, o
+   PDF pode sair **maior** que o original — por isso o aviso na tela só mostra
+   `antes → depois` quando o depois é menor.
 
 ## Folhas (20/10/2026, a pedido dele)
 Além das 3 padrão, duas folhas novas com **tipo próprio** (o tipo decide os
@@ -173,10 +184,29 @@ Pedido do Hamilton: **guardar a foto do exame/consulta junto do item**, na pasta
 
 **Como funciona hoje**
 - Só na folha de **Consultas e Exames** aparece o botão **📷** em cada item.
-- Ele abre um `st.file_uploader` (aceita **várias fotos**: jpg, jpeg, png, webp,
-  heic, heif, pdf). No celular, esse mesmo botão abre a **câmera**.
+- Ele abre duas escolhas: **📸 Câmera** (abre a câmera do celular, `st.camera_input`)
+  ou **📁 Arquivo** (`st.file_uploader`: várias fotos de uma vez — jpg, jpeg, png,
+  webp — ou um PDF que já existe).
+- **Toda foto é reduzida e vira PDF antes de subir** (pedido do Hamilton em
+  21/10: "foto da câmera, guardado como PDF, que é menor"). Vários arquivos
+  escolhidos de uma vez viram **um único PDF com N páginas**.
 - O app sobe para o Drive e grava o link na **coluna H ("Foto")** da linha.
 - O item passa a mostrar **📷 foto 1 · foto 2**, que abre no Drive.
+
+**O tamanho menor vem de reduzir, não do PDF** (lição 12): a foto é endireitada
+pelo EXIF e reduzida a **1800 px** no lado maior, JPEG qualidade 78 (`LADO_MAX` e
+`QUALIDADE` em `src/fotos.py`). Foto de 3,3 MB → **~1 MB** de PDF (foto de
+celular de verdade, com menos ruído, fica em ~250-400 KB). O aviso na tela mostra
+`518 KB → 795 KB` quando é possível comparar — se o PDF ficar maior (foto já
+muito comprimida), ele **não** mostra a conta.
+
+**HEIC ficou fora da lista de propósito:** sem a extensão em `TIPOS_ACEITOS`, o
+iPhone converte a foto para JPEG antes de mandar; se aceitasse HEIC, o Pillow não
+abriria sem `pillow-heif` (dependência a mais na nuvem).
+
+⚠️ **Trava de reenvio:** trocar a escolha (Câmera ↔ Arquivo) faz a tela rodar de
+novo **com o mesmo arquivo já escolhido**. Sem a trava (`session_state["enviadas<linha>"]`)
+a mesma foto subiria duas vezes. A trava é limpa quando o 📷 é clicado de novo.
 
 **Quem sobe a foto é o Hamilton, não o robô.** (Decisão dele em 20/10: "o app
 envia, usando sua conta".) O motivo está na lição 6: conta de serviço **não pode
@@ -186,7 +216,7 @@ ser dona de arquivo**. Então:
 |---|---|
 | `autorizar-fotos.py` | pede a permissão **uma vez** (abre o navegador, você clica em *Permitir*) |
 | `credentials/token-fotos.json` | o token que sobra (fora do git); **renova sozinho** |
-| `src/fotos.py` | `enviar()` / `deletar()` / `nome_do_arquivo()` |
+| `src/fotos.py` | `preparar()` (reduz + PDF) / `enviar()` / `deletar()` / `nome_do_arquivo()` |
 | `src/config.py` | `PASTA_FOTOS` e `TOKEN_FOTOS` |
 | `src/planilha.py` | `gravar_foto()` escreve **só a célula H** daquela linha |
 
@@ -205,6 +235,14 @@ navegador → a planilha ficou com o link em `H2` e o Drive com
 **apagados** depois; a pasta ficou vazia de novo.
 Também testado o caminho **da nuvem** (token vindo de dicionário, sem arquivo):
 subiu e apagou igual.
+
+**Prova (21/10, câmera + PDF):** no app rodando (8641), entrei, abri a folha
+*Consultas e Exames*, criei "Teste foto PDF" e cliquei no 📷 → apareceram
+**📸 Câmera** (o navegador pediu a câmera: *"This app would like to use your
+camera"*) e **📁 Arquivo**. Enviei um JPG de **518 KB** por *Arquivo* → a planilha
+ficou com o link em `H3` e o Drive com `21-10-2026 - Teste foto PDF.pdf`
+(**795 KB**, `application/pdf`). Item apagado pela tela e arquivo apagado do
+Drive; a pasta ficou vazia.
 
 ## 🌐 O repositório público (por que existe)
 
@@ -292,21 +330,20 @@ vez de pular para a primeira. Provado na tela: item "Dentista" caiu na folha
 certa e foi apagado depois.
 
 ## Pendências
-- [ ] **Publicar no Streamlit Cloud** (decidido em 20/10: vai publicar, para ela
-      usar no celular). O código já está pronto; falta o clique no site:
-      1. `share.streamlit.io` → **New app**.
-      2. Repositório **`hamiltonjau/raquel-anotacoes`** (público — ver abaixo por
-         quê), branch **main**, *main file* **`app.py`**.
-      3. **Secrets**: rodar no PC
-         `./.venv/bin/python preparar-nuvem.py` e colar a saída inteira
-         (`senha`, `[gcp_service_account]` e `[google_oauth]` — a senha **antes**
-         das seções).
-      4. *Deploy*. O link vira o atalho na tela inicial do celular dela.
-      ⚠️ Se a tela de consentimento do Google estiver em **"Testing"**, o
-      *refresh token* das fotos pode expirar em ~7 dias — se as fotos pararem de
-      subir, rodar `autorizar-fotos.py` de novo e atualizar o `[google_oauth]`
-      nos Secrets. (O app continua funcionando sem foto: ele mostra o erro em
-      português e não perde o item.)
+- [x] **Publicado no Streamlit Cloud** (21/10/2026): https://raquel-anotacoes.streamlit.app
+      Repositório **público** `hamiltonjau/raquel-anotacoes`, branch `main`,
+      *main file* `app.py`, Python **3.12** nos *Secrets* configurados.
+      **Como testei de fora:** entrei com a senha, a planilha e as 5 folhas
+      carregaram (conta de serviço OK) e o envio de foto funcionou com o token
+      dos *Secrets* (arquivo criado e apagado depois).
+      **Reimplantar:** `bash sincronizar-publico.sh "mensagem"` — o Streamlit
+      Cloud pega o push sozinho (~1 min). Mudança em `requirements.txt` pede
+      *Reboot* no painel.
+- [ ] **Token das fotos pode vencer** (a tela de consentimento do Google está em
+      **"Testing"**): o *refresh token* pode expirar em ~7 dias. Se as fotos
+      pararem de subir, rodar `autorizar-fotos.py` no PC de novo e colar o novo
+      `[google_oauth]` nos *Secrets* do Streamlit Cloud (o app continua
+      funcionando sem foto: mostra o erro em português e não perde o item).
 - [ ] **Senha na internet**: a senha tem 6 dígitos e o app vai ficar público.
       Já entrou um **freio de tentativas** (espera de 2 s, 4 s, 8 s… até 60 s a
       partir do 3º erro, dentro da mesma sessão). Se quiser mais, é trocar por

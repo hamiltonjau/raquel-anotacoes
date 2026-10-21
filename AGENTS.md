@@ -38,7 +38,7 @@ são próprios** — nada é compartilhado com o app dele além do robô.
 | `src/regra.py` | **a regra** — pura, sem internet: item, "feito", preço, tipo, limites |
 | `src/planilha.py` | conversa com a planilha: ler, escrever, criar folha, formato |
 | `src/acesso.py` | credenciais e serviços do Google |
-| `src/fotos.py` | **fotos no Drive**: envio com a conta do dono (OAuth), não com o robô |
+| `src/fotos.py` | **fotos no Drive**: reduz a foto (1800 px), monta o **PDF** e envia com a conta do dono (OAuth), não com o robô |
 | `src/config.py` | nome da planilha (**Anotações da Raquel**), escopos, pasta das fotos, `ligar_ipv4()` |
 | `autorizar-fotos.py` | roda **1x** (abre o navegador) e cria `credentials/token-fotos.json` |
 | `preparar-nuvem.py` | imprime o TOML dos *Secrets* da nuvem (não escreve em arquivo) |

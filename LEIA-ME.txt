@@ -47,10 +47,15 @@ As folhas de hoje são estas (na ordem em que aparecem):
   texto vem depois. Tudo numa linha só — também no celular.
 + O 🗑️ apaga **só aquele item** — e pede confirmação
   ("Sim, apagar" / "Não"). Nada de apagar em massa.
-+ 📷 (nas Consultas) guarda a **foto do exame ou da consulta**: toque no
-  📷 do item, escolha a foto (no celular ele abre a câmera ou a galeria) e
-  pronto — a foto vai para a pasta "PDF e Imagens" do Drive. Aceita várias de
-  uma vez, e também PDF. Depois o item mostra "📷 foto 1" para você abrir.
++ 📷 (nas Consultas) guarda a **foto do exame ou da consulta**: toque no 📷
+  do item e escolha:
+    · 📸 Câmera  -> abre a câmera e você tira a foto na hora;
+    · 📁 Arquivo -> pega da galeria (pode escolher várias de uma vez) ou um
+      PDF que já existe.
+  O app reduz a foto e guarda em PDF, que fica bem mais leve. Vai para a pasta
+  "PDF e Imagens" do Drive. Depois o item mostra "📷 foto 1" para você abrir.
+  Se tirar uma foto errada, é só apagar o item e criar de novo (a foto fica no
+  Drive, na pasta "PDF e Imagens").
 + Troque de folha tocando nos nomes no topo da tela.
 + Para criar uma folha nova: barra da esquerda -> "Nova folha" -> escolha o tipo
   -> "Criar folha". A folha nasce igual às outras (cabeçalho congelado, etc.).
