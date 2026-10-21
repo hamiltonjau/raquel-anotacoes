@@ -154,7 +154,13 @@ raquel-anotacoes`.
    + `dispatchEvent(new Event('input', {bubbles: true}))`. E `.click()` puro às
    vezes não dispara o `st.button`: o que passou foi a sequência completa de
    `pointerdown/mousedown/pointerup/mouseup/click` nas coordenadas do botão.
-12. **"PDF é menor" não é verdade sozinho — quem encolhe é a redução.** Guardar
+12. **`st.camera_input` sem `resolution` captura no tamanho do widget.** O padrão
+   (`None`) tira a foto com a largura em que o vídeo aparece na tela — no celular,
+   **~350 px**. A imagem nasce borrada e não tem compressão que conserte. Passe
+   `resolution="1080p"` (as opções são 480p, 720p e 1080p; o 1080p vira
+   `minScreenshotWidth = 1920`). Descoberto em 21/10/2026 com o print de um
+   comprovante ilegível.
+13. **"PDF é menor" não é verdade sozinho — quem encolhe é a redução.** Guardar
    como PDF só embala a foto; 4 MB de foto continuam ~4 MB dentro do PDF. O ganho
    vem de `thumbnail(1800)` + JPEG q78. E, se a foto já vier muito comprimida, o
    PDF pode sair **maior** que o original — por isso o aviso na tela só mostra
@@ -194,11 +200,29 @@ Pedido do Hamilton: **guardar a foto do exame/consulta junto do item**, na pasta
 - O item passa a mostrar **📷 foto 1 · foto 2**, que abre no Drive.
 
 **O tamanho menor vem de reduzir, não do PDF** (lição 12): a foto é endireitada
-pelo EXIF e reduzida a **1800 px** no lado maior, JPEG qualidade 78 (`LADO_MAX` e
-`QUALIDADE` em `src/fotos.py`). Foto de 3,3 MB → **~1 MB** de PDF (foto de
-celular de verdade, com menos ruído, fica em ~250-400 KB). O aviso na tela mostra
-`518 KB → 795 KB` quando é possível comparar — se o PDF ficar maior (foto já
-muito comprimida), ele **não** mostra a conta.
+pelo EXIF e reduzida a **2600 px** no lado maior, JPEG qualidade 88 (`LADO_MAX` e
+`QUALIDADE` em `src/fotos.py`). O aviso na tela mostra `518 KB → 120 KB` quando é
+possível comparar — se o PDF ficar maior (foto já muito comprimida), ele **não**
+mostra a conta.
+
+**Qualidade (conserto de 21/10, à noite).** O Hamilton mandou o print de um
+comprovante **ilegível**. A causa não era o JPEG nem o PDF: **era o
+`st.camera_input` sem `resolution`** — sem esse parâmetro o Streamlit captura uma
+imagem do **tamanho em que o vídeo aparece na tela** (num celular, ~350 px de
+largura!). A foto nascia borrada e nenhuma compressão depois salva.
+
+O que mudou:
+
+| Antes | Agora |
+|---|---|
+| `st.camera_input` sem resolução → print da tela (~350 px) | `resolution="1080p"` (o máximo que existe: 480p, 720p, 1080p) |
+| 1800 px / q78 | 2600 px / q88 |
+
+Com isso a foto da câmera não é mais reduzida (1920 < 2600) — só reencodada.
+Documento de 12 MP vindo de *Arquivo* cai para 2600 px (~600-900 KB). Legenda
+embaixo da câmera lembra que o **⇄** troca para a câmera de trás (o padrão é a da
+frente) e que, para documento, **📁 Arquivo → Câmera** dá a resolução cheia do
+celular (12 MP, muito melhor que o vídeo de 1080p).
 
 **HEIC ficou fora da lista de propósito:** sem a extensão em `TIPOS_ACEITOS`, o
 iPhone converte a foto para JPEG antes de mandar; se aceitasse HEIC, o Pillow não

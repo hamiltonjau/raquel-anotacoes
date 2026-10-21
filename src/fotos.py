@@ -23,10 +23,14 @@ SCOPES = ["https://www.googleapis.com/auth/drive"]
 # para JPEG antes de enviar (e aí tudo funciona em qualquer máquina).
 TIPOS_ACEITOS = ["jpg", "jpeg", "png", "webp", "pdf"]
 
-# O que deixa a foto leve não é o PDF: é reduzir o lado e recomprimir. 1800 px
-# dá para ler exame no celular e cabe em ~200-400 KB.
-LADO_MAX = 1800
-QUALIDADE = 78
+# O que deixa a foto leve não é o PDF: é reduzir o lado e recomprimir. Mas
+# documento é diferente de paisagem: **texto pequeno borra fácil**. Em 21/10 o
+# Hamilton mandou o print de um comprovante ilegível com 1800 px / q78 — então
+# subiu para 2600 px / q88 (a câmera do Streamlit entrega no máximo 1080p, então
+# na prática isso não aumenta nada vindo da câmera; protege o que vem de arquivo,
+# que pode ter 4000 px). PDF de um documento fica em ~500-900 KB — vale a pena.
+LADO_MAX = 2600
+QUALIDADE = 88
 
 _trava = threading.Lock()
 _cache = {"chave": None, "creds": None}

@@ -504,8 +504,14 @@ def _area_fotos(sheets, sid: str, folha: str, item: dict) -> None:
              "dos downloads ou um PDF que já existe.",
     )
     if origem.startswith("📸"):
+        # 1080p é o máximo que o `st.camera_input` oferece (as opções são 480p,
+        # 720p e 1080p) — sem isso o Streamlit entrega um vídeo mais baixo e o
+        # texto do exame borra.
         foto = st.camera_input("Tirar foto", key=f"cam{item['linha']}",
-                               label_visibility="collapsed")
+                               resolution="1080p", label_visibility="collapsed")
+        st.caption("Câmera da frente? Toque no **⇄** no canto da imagem. "
+                   "Para documento, vale mais **📁 Arquivo → Câmera** (foto em "
+                   "resolução cheia do celular).")
         arquivos = [foto] if foto else []
     else:
         arquivos = st.file_uploader(

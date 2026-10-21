@@ -52,8 +52,14 @@ As folhas de hoje são estas (na ordem em que aparecem):
     · 📸 Câmera  -> abre a câmera e você tira a foto na hora;
     · 📁 Arquivo -> pega da galeria (pode escolher várias de uma vez) ou um
       PDF que já existe.
-  O app reduz a foto e guarda em PDF, que fica bem mais leve. Vai para a pasta
-  "PDF e Imagens" do Drive. Depois o item mostra "📷 foto 1" para você abrir.
+  Duas dicas de foto:
+    · a câmera começa na da FRENTE — toque no **⇄** (canto da imagem) para
+      passar para a de trás, que é a boa para documento;
+    · documento (comprovante, exame em papel) sai bem mais nítido por
+      **📁 Arquivo -> Câmera**: aí quem tira a foto é o app de câmera do
+      celular, com a resolução cheia (12 MP em vez do vídeo de 1080p).
+  O app guarda em PDF, que fica leve. Vai para a pasta "PDF e Imagens" do Drive.
+  Depois o item mostra "📷 foto 1" para você abrir.
   Se tirar uma foto errada, é só apagar o item e criar de novo (a foto fica no
   Drive, na pasta "PDF e Imagens").
 + Troque de folha tocando nos nomes no topo da tela.
